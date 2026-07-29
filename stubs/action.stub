@@ -1,0 +1,15 @@
+<?php
+
+namespace {{ namespace }}
+
+class {{ class }}
+{
+    /**
+    * Execute the action
+    */
+
+    public function handle(arry $data)
+    {
+        // Your class logic
+    }
+}
