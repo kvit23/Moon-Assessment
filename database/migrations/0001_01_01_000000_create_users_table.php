@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique()->nullable();
             $table->string('phone')->unique();
-            $table->timestamp('phone_verified_at')->nullable();
+            //$table->timestamp('phone_verified_at')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->enum('role', UserRoleEnum::values())->default(UserRoleEnum::USER->value);

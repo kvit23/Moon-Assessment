@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Actions\Auth\CreateUserAction;
 use App\Events\UserRegistered;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\Auth\ChangePasswordRequest;
 use App\Http\Requests\Api\V1\Auth\LoginRequest;
 use App\Http\Requests\Api\V1\Auth\RegisterRequest;
 use App\Http\Resources\Api\V1\UserResource;
@@ -120,4 +121,22 @@ class AuthController extends Controller
             'token' => $token->plainTextToken,
         ]);
     }
+
+    public function changePassword(ChangePasswordRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        
+        // Update password
+        $user->update([
+            'password' => Hash::make($request->input('password')),
+        ]);
+
+        // Optional: Revoke all tokens except current one
+        // $user->tokens()->where('id', '!=', $user->currentAccessToken()->id)->delete();
+
+        return response()->json([
+            'message' => 'Password changed successfully.',
+        ]);
+    }
+
 }

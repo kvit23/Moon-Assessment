@@ -22,7 +22,7 @@ enum VerificationTypeEnum: string
         return match($this) {
             self::PHONE_VERIFICATION => 10,
             self::EMAIL_VERIFICATION => 15,
-            self::PASSWORD_RESET => 30,
+            self::PASSWORD_RESET => 10, // 10 minutes for reset code
         };
     }
 
@@ -31,7 +31,7 @@ enum VerificationTypeEnum: string
         return match($this) {
             self::PHONE_VERIFICATION => 5,
             self::EMAIL_VERIFICATION => 5,
-            self::PASSWORD_RESET => 3,
+            self::PASSWORD_RESET => 3, // More restrictive for password reset
         };
     }
 

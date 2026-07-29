@@ -2,8 +2,12 @@
 
 namespace App\Providers;
 
+use App\Events\PasswordResetCompleted;
+use App\Events\PasswordResetRequested;
 use App\Events\PhoneVerificationRequested;
 use App\Events\UserRegistered;
+use App\Listeners\LogPasswordReset;
+use App\Listeners\SendPasswordResetSms;
 use App\Listeners\SendVerificationCodeSms;
 use App\Listeners\SendWelcomeEmail;
 use Illuminate\Auth\Events\Registered;
@@ -26,6 +30,13 @@ class EventServiceProvider extends ServiceProvider
         ],
         PhoneVerificationRequested::class => [
             SendVerificationCodeSms::class,
+        ],
+        PasswordResetRequested::class => [
+            SendPasswordResetSms::class,
+        ],
+        PasswordResetCompleted::class => [
+            LogPasswordReset::class,
+            // Future: Send SMS notification, email notification
         ],
     ];
 
