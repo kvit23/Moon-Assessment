@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\Admin\ProductManagementController;
 use App\Http\Controllers\Api\V1\Admin\OrderManagementController;
+use App\Http\Controllers\Api\V1\BackInStockController;
 
 Route::prefix('v1')->group(function () {
     
@@ -98,7 +99,15 @@ Route::prefix('v1')->group(function () {
             Route::put('/orders/{order}/status', [OrderManagementController::class, 'updateStatus']);
             Route::post('/orders/{order}/cancel', [OrderManagementController::class, 'cancel']);
             Route::get('/orders/statistics', [OrderManagementController::class, 'statistics']);
-        });
+    });
+
+    // Back-in-stock subscription
+    Route::middleware(['auth:sanctum'])->group(function () {
+        Route::post('/products/{product}/subscribe', [BackInStockController::class, 'subscribe']);
+        Route::delete('/products/{product}/unsubscribe', [BackInStockController::class, 'unsubscribe']);
+        Route::get('/subscriptions', [BackInStockController::class, 'mySubscriptions']);
+    });
+
 });
 
 // Test route (optional)

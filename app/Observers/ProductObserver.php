@@ -2,26 +2,59 @@
 
 namespace App\Observers;
 
+use App\Events\BackInStock;
 use App\Events\ProductCreated;
 use App\Models\Product;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class ProductObserver
 {
-    
     /**
      * Handle the Product "created" event.
      */
     public function created(Product $product): void
     {
-        // Dispatch the event
-        // This triggers the listener which handles notifications
         event(new ProductCreated($product));
 
-        Log::info('Product created event dispatched', [
+        Log::info('Product created', [
             'product_id' => $product->id,
         ]);
+    }
+
+    /**
+     * Handle the Product "updating" event.
+     * 
+     * CRITICAL: This is where we detect stock changes
+     * BEFORE the model is saved to the database.
+     */
+    public function updating(Product $product): void
+    {
+        // Get the original stock from the database
+        $oldStock = $product->getOriginal('stock_quantity');
+        $newStock = $product->stock_quantity;
+
+        // Only trigger if stock changed from 0 to >0
+        $this->checkBackInStock($product, $oldStock, $newStock);
+    }
+
+    /**
+     * Check if product is back in stock and dispatch event if needed.
+     */
+    protected function checkBackInStock(Product $product, int $oldStock, int $newStock): void
+    {
+        // CRITICAL: Only trigger when:
+        // - Old stock was 0 (out of stock)
+        // - New stock is greater than 0 (back in stock)
+        if ($oldStock === 0 && $newStock > 0) {
+            Log::info('Product back in stock detected', [
+                'product_id' => $product->id,
+                'old_stock' => $oldStock,
+                'new_stock' => $newStock,
+            ]);
+
+            // Dispatch event for subscribers
+            event(new BackInStock($product, $oldStock, $newStock));
+        }
     }
 
     /**
@@ -29,7 +62,6 @@ class ProductObserver
      */
     public function updated(Product $product): void
     {
-        // Log changes
         $changes = $product->getChanges();
         
         if (!empty($changes)) {
@@ -37,16 +69,6 @@ class ProductObserver
                 'product_id' => $product->id,
                 'changes' => $changes,
             ]);
-
-            // If stock changed, maybe dispatch StockUpdated event
-            if (isset($changes['stock_quantity'])) {
-                // event(new ProductStockUpdated($product));
-            }
-
-            // If status changed to published, maybe dispatch ProductPublished event
-            if (isset($changes['status']) && $changes['status'] === 'published') {
-                // event(new ProductPublished($product));
-            }
         }
     }
 
@@ -55,17 +77,9 @@ class ProductObserver
      */
     public function deleted(Product $product): void
     {
-        Log::info('Product deleted (soft)', [
+        Log::info('Product soft-deleted', [
             'product_id' => $product->id,
-            'sku' => $product->sku,
-            'deleted_by' => Auth::id(),
         ]);
-
-        // Clean up related data
-        // - Remove from search index
-        // - Clear cache
-        // - Remove from wishlists
-        // - Disable notifications
     }
 
     /**
@@ -75,12 +89,7 @@ class ProductObserver
     {
         Log::info('Product restored', [
             'product_id' => $product->id,
-            'sku' => $product->sku,
-            'restored_by' => Auth::id(),
         ]);
-
-        // Re-index for search
-        // Restore notifications
     }
 
     /**
@@ -90,12 +99,6 @@ class ProductObserver
     {
         Log::info('Product permanently deleted', [
             'product_id' => $product->id,
-            'sku' => $product->sku,
         ]);
-
-        // Clean up all resources
-        // - Delete image files
-        // - Remove from search index
-        // - Delete notifications
     }
 }
