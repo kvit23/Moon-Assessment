@@ -7,53 +7,64 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
-## About Laravel
+## About the project 
+is a simple online store with a few different features
+- oredering 
+- listing 
+- otp auth system with phone number
+- mobile sms notificaions 
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+stack:
+- laravel 12 rest API 
+- postgres database
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+installing the project 
+- clone from "https://github.com/kvit23/Moon-Assessment.git" 
+- copy .env.exampl
+- composer install 
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
-
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+end-points (check the API doc file)
+------------------
+#	Method	Endpoint	Auth
+1	POST	/api/v1/auth/register	Public
+2	POST	/api/v1/auth/login	Public
+3	POST	/api/v1/auth/password/forgot	Public
+4	POST	/api/v1/auth/password/verify	Public
+5	POST	/api/v1/auth/password/reset	Public
+6	GET	/api/v1/auth/products	Public
+7	GET	/api/v1/auth/products/{product}	Public
+8	DELETE	/api/v1/auth/logout	Token
+9	GET	/api/v1/auth/user	Token
+10	POST	/api/v1/auth/refresh	Token
+11	POST	/api/v1/auth/change-password	Token
+12	POST	/api/v1/auth/phone/verify/send	Token
+13	POST	/api/v1/auth/phone/verify	Token
+14	POST	/api/v1/auth/phone/verify/resend	Token
+15	GET	/api/v1/auth/profile	Token
+16	PUT	/api/v1/auth/profile	Token
+17	GET	/api/v1/auth/orders	Token
+18	POST	/api/v1/auth/orders	Token
+19	GET	/api/v1/auth/orders/{order}	Token
+20	POST	/api/v1/auth/orders/{order}/cancel	Token
+21	POST	/api/v1/products/{product}/subscribe	Token
+22	DELETE	/api/v1/products/{product}/unsubscribe	Token
+23	GET	/api/v1/subscriptions	Token
+24	GET	/api/v1/admin/products	Admin
+25	POST	/api/v1/admin/products	Admin
+26	GET	/api/v1/admin/products/{product}	Admin
+27	PUT	/api/v1/admin/products/{product}	Admin
+28	DELETE	/api/v1/admin/products/{product}	Admin
+29	POST	/api/v1/admin/products/{id}/restore	Admin
+30	DELETE	/api/v1/admin/products/{id}/force	Admin
+31	GET	/api/v1/admin/orders	Admin
+32	GET	/api/v1/admin/orders/{order}	Admin
+33	PUT	/api/v1/admin/orders/{order}/status	Admin
+34	POST	/api/v1/admin/orders/{order}/cancel	Admin
+35	GET	/api/csrf-cookie	-
+36	GET	/storage/{path}	-
+37	GET	/api/user	Token
+38	GET	/	-
+39	GET	/api/up	-
+40	GET	/api/v1/auth/orders	Token
+41	GET	/api/v1/auth/orders/{order}	Token

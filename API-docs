@@ -1,0 +1,1053 @@
+Complete API Documentation — All Endpoints in One File
+markdown
+# API Documentation — Complete Reference
+
+## Base URL
+http://localhost:8000/api/v1
+
+text
+
+## Authentication Header
+Authorization: Bearer {your_token}
+Accept: application/json
+Content-Type: application/json
+
+text
+
+---
+
+PUBLIC ROUTES (No Auth Required)
+
+## POST /api/v1/auth/register
+**Register a new user**
+
+**Request:**
+```json
+{
+    "name": "John Doe",
+    "phone": "+1234567890",
+    "email": "john@example.com",
+    "password": "Password123!",
+    "password_confirmation": "Password123!",
+    "role": "user",
+    "device_name": "mobile-app"
+}
+Response (201):
+
+json
+{
+    "message": "User registered successfully.",
+    "data": {
+        "id": 1,
+        "name": "John Doe",
+        "phone": "+1234567890",
+        "email": "john@example.com",
+        "role": "user",
+        "role_label": "User",
+        "is_active": true,
+        "is_admin": false,
+        "phone_verified": false,
+        "email_verified": false,
+        "last_login_at": null,
+        "created_at": "2024-01-01T00:00:00.000000Z",
+        "updated_at": "2024-01-01T00:00:00.000000Z"
+    },
+    "token": "1|abcdef1234567890..."
+}
+POST /api/v1/auth/login
+Login and get token
+
+Request:
+
+json
+{
+    "phone": "+1234567890",
+    "password": "Password123!",
+    "device_name": "mobile-app"
+}
+Response (200):
+
+json
+{
+    "message": "Login successful.",
+    "data": {
+        "id": 1,
+        "name": "John Doe",
+        "phone": "+1234567890",
+        "email": "john@example.com",
+        "role": "user",
+        "role_label": "User",
+        "is_active": true,
+        "is_admin": false,
+        "phone_verified": false,
+        "email_verified": false,
+        "last_login_at": "2024-01-01T00:00:00.000000Z",
+        "created_at": "2024-01-01T00:00:00.000000Z",
+        "updated_at": "2024-01-01T00:00:00.000000Z"
+    },
+    "token": "2|abcdef1234567890..."
+}
+Error (422):
+
+json
+{
+    "message": "The provided credentials are incorrect.",
+    "errors": {
+        "phone": ["The provided credentials are incorrect."]
+    }
+}
+POST /api/v1/auth/password/forgot
+Request password reset code
+
+Request:
+
+json
+{
+    "phone": "+1234567890"
+}
+Response (200):
+
+json
+{
+    "message": "If the phone number exists, a reset code will be sent."
+}
+POST /api/v1/auth/password/verify
+Verify reset code
+
+Request:
+
+json
+{
+    "phone": "+1234567890",
+    "code": "123456"
+}
+Response (200):
+
+json
+{
+    "message": "Code verified successfully.",
+    "reset_token": "abc123def4567890...",
+    "expires_in": 15
+}
+Error (422):
+
+json
+{
+    "message": "Invalid verification code.",
+    "errors": {
+        "code": ["Invalid verification code."]
+    }
+}
+POST /api/v1/auth/password/reset
+Reset password with token
+
+Request:
+
+json
+{
+    "phone": "+1234567890",
+    "reset_token": "abc123def4567890...",
+    "password": "NewPassword123!",
+    "password_confirmation": "NewPassword123!"
+}
+Response (200):
+
+json
+{
+    "message": "Password reset successfully. Please login with your new password."
+}
+GET /api/v1/auth/products
+List published products
+
+Query Parameters:
+
+text
+search=phone&min_price=100&max_price=500&in_stock=true&sort_by=price&sort_order=asc&per_page=20
+Response (200):
+
+json
+{
+    "data": [
+        {
+            "id": 1,
+            "title": "iPhone 15",
+            "slug": "iphone-15",
+            "description": "Latest iPhone model",
+            "sku": "PHONE-001",
+            "price": 999.99,
+            "price_formatted": "999.99",
+            "cost": 799.99,
+            "stock_quantity": 50,
+            "reorder_level": 5,
+            "status": "published",
+            "image_url": "/storage/products/2024/01/iphone-15.jpg",
+            "published_at": "2024-01-01T00:00:00.000000Z",
+            "created_at": "2024-01-01T00:00:00.000000Z",
+            "updated_at": "2024-01-01T00:00:00.000000Z"
+        }
+    ],
+    "meta": {
+        "total": 50,
+        "per_page": 20,
+        "current_page": 1,
+        "last_page": 3,
+        "from": 1,
+        "to": 20
+    }
+}
+GET /api/v1/auth/products/{product}
+Show single product
+
+Response (200):
+
+json
+{
+    "data": {
+        "id": 1,
+        "title": "iPhone 15",
+        "slug": "iphone-15",
+        "description": "Latest iPhone model",
+        "sku": "PHONE-001",
+        "price": 999.99,
+        "price_formatted": "999.99",
+        "cost": 799.99,
+        "stock_quantity": 50,
+        "reorder_level": 5,
+        "status": "published",
+        "image_url": "/storage/products/2024/01/iphone-15.jpg",
+        "published_at": "2024-01-01T00:00:00.000000Z",
+        "created_at": "2024-01-01T00:00:00.000000Z",
+        "updated_at": "2024-01-01T00:00:00.000000Z"
+    }
+}
+🔒 AUTHENTICATED ROUTES (Token Required)
+DELETE /api/v1/auth/logout
+Logout and revoke token
+
+Headers:
+
+text
+Authorization: Bearer {token}
+Response (200):
+
+json
+{
+    "message": "Logged out successfully."
+}
+GET /api/v1/auth/user
+Get authenticated user
+
+Headers:
+
+text
+Authorization: Bearer {token}
+Response (200):
+
+json
+{
+    "data": {
+        "id": 1,
+        "name": "John Doe",
+        "phone": "+1234567890",
+        "email": "john@example.com",
+        "role": "user",
+        "role_label": "User",
+        "is_active": true,
+        "is_admin": false,
+        "phone_verified": false,
+        "email_verified": false,
+        "last_login_at": "2024-01-01T00:00:00.000000Z",
+        "created_at": "2024-01-01T00:00:00.000000Z",
+        "updated_at": "2024-01-01T00:00:00.000000Z"
+    }
+}
+POST /api/v1/auth/refresh
+Refresh token
+
+Headers:
+
+text
+Authorization: Bearer {token}
+Request:
+
+json
+{
+    "device_name": "mobile-app-v2"
+}
+Response (200):
+
+json
+{
+    "message": "Token refreshed successfully.",
+    "token": "3|abcdef1234567890..."
+}
+POST /api/v1/auth/change-password
+Change password (logged in)
+
+Headers:
+
+text
+Authorization: Bearer {token}
+Request:
+
+json
+{
+    "current_password": "OldPassword123!",
+    "password": "NewPassword123!",
+    "password_confirmation": "NewPassword123!"
+}
+Response (200):
+
+json
+{
+    "message": "Password changed successfully."
+}
+POST /api/v1/auth/phone/verify/send
+Send phone verification code
+
+Headers:
+
+text
+Authorization: Bearer {token}
+Response (200):
+
+json
+{
+    "message": "Verification code sent successfully.",
+    "expires_in": 10
+}
+POST /api/v1/auth/phone/verify
+Verify phone with code
+
+Headers:
+
+text
+Authorization: Bearer {token}
+Request:
+
+json
+{
+    "code": "123456"
+}
+Response (200):
+
+json
+{
+    "message": "Phone verified successfully."
+}
+POST /api/v1/auth/phone/verify/resend
+Resend verification code
+
+Headers:
+
+text
+Authorization: Bearer {token}
+Response (200):
+
+json
+{
+    "message": "Verification code resent successfully.",
+    "expires_in": 10
+}
+GET /api/v1/auth/profile
+Get user profile
+
+Headers:
+
+text
+Authorization: Bearer {token}
+Response (200):
+
+json
+{
+    "data": {
+        "id": 1,
+        "name": "John Doe",
+        "phone": "+1234567890",
+        "email": "john@example.com",
+        "role": "user",
+        "role_label": "User",
+        "is_active": true,
+        "is_admin": false,
+        "phone_verified": false,
+        "email_verified": false,
+        "last_login_at": "2024-01-01T00:00:00.000000Z",
+        "created_at": "2024-01-01T00:00:00.000000Z",
+        "updated_at": "2024-01-01T00:00:00.000000Z"
+    }
+}
+PUT /api/v1/auth/profile
+Update user profile
+
+Headers:
+
+text
+Authorization: Bearer {token}
+Request:
+
+json
+{
+    "name": "John Smith",
+    "email": "johnsmith@example.com",
+    "phone": "+1987654321"
+}
+Response (200):
+
+json
+{
+    "message": "Profile updated successfully.",
+    "data": {
+        "id": 1,
+        "name": "John Smith",
+        "phone": "+1987654321",
+        "email": "johnsmith@example.com",
+        "role": "user",
+        "role_label": "User",
+        "is_active": true,
+        "is_admin": false,
+        "phone_verified": false,
+        "email_verified": false,
+        "last_login_at": "2024-01-01T00:00:00.000000Z",
+        "created_at": "2024-01-01T00:00:00.000000Z",
+        "updated_at": "2024-01-01T00:00:00.000000Z"
+    }
+}
+GET /api/v1/auth/orders
+List user's orders
+
+Headers:
+
+text
+Authorization: Bearer {token}
+Response (200):
+
+json
+{
+    "data": [
+        {
+            "id": 1,
+            "order_number": "ORD-20240101-ABC123",
+            "status": "pending",
+            "subtotal": 199.98,
+            "tax": 19.99,
+            "shipping_cost": 10.00,
+            "discount": 0,
+            "total_price": 229.97,
+            "total_formatted": "229.97",
+            "shipping_address": {
+                "line1": "123 Main St",
+                "city": "New York",
+                "state": "NY",
+                "postal_code": "10001",
+                "country": "USA"
+            },
+            "notes": "Leave at door",
+            "items": [
+                {
+                    "product_id": 1,
+                    "product_title": "iPhone 15",
+                    "quantity": 2,
+                    "unit_price": 99.99,
+                    "subtotal": 199.98
+                }
+            ],
+            "created_at": "2024-01-01T00:00:00.000000Z",
+            "updated_at": "2024-01-01T00:00:00.000000Z"
+        }
+    ],
+    "meta": {
+        "total": 10,
+        "per_page": 20,
+        "current_page": 1,
+        "last_page": 1,
+        "from": 1,
+        "to": 10
+    }
+}
+POST /api/v1/auth/orders
+Create new order
+
+Headers:
+
+text
+Authorization: Bearer {token}
+Request:
+
+json
+{
+    "items": [
+        {
+            "product_id": 1,
+            "quantity": 2
+        }
+    ],
+    "shipping_address": {
+        "line1": "123 Main St",
+        "line2": "Apt 4B",
+        "city": "New York",
+        "state": "NY",
+        "postal_code": "10001",
+        "country": "USA"
+    },
+    "notes": "Please leave at the door."
+}
+Response (201):
+
+json
+{
+    "message": "Order created successfully.",
+    "data": {
+        "id": 1,
+        "order_number": "ORD-20240101-ABC123",
+        "status": "pending",
+        "subtotal": 199.98,
+        "tax": 19.99,
+        "shipping_cost": 10.00,
+        "discount": 0,
+        "total_price": 229.97,
+        "total_formatted": "229.97",
+        "shipping_address": {
+            "line1": "123 Main St",
+            "line2": "Apt 4B",
+            "city": "New York",
+            "state": "NY",
+            "postal_code": "10001",
+            "country": "USA"
+        },
+        "notes": "Please leave at the door.",
+        "items": [
+            {
+                "product_id": 1,
+                "product_title": "iPhone 15",
+                "quantity": 2,
+                "unit_price": 99.99,
+                "subtotal": 199.98
+            }
+        ],
+        "created_at": "2024-01-01T00:00:00.000000Z",
+        "updated_at": "2024-01-01T00:00:00.000000Z"
+    }
+}
+Error (422):
+
+json
+{
+    "message": "Insufficient stock for iPhone 15. Available: 1",
+    "errors": {
+        "items.*.quantity": ["Insufficient stock for iPhone 15. Available: 1"]
+    }
+}
+GET /api/v1/auth/orders/{order}
+Show specific order
+
+Headers:
+
+text
+Authorization: Bearer {token}
+Response (200):
+
+json
+{
+    "data": {
+        "id": 1,
+        "order_number": "ORD-20240101-ABC123",
+        "status": "pending",
+        "subtotal": 199.98,
+        "tax": 19.99,
+        "shipping_cost": 10.00,
+        "discount": 0,
+        "total_price": 229.97,
+        "total_formatted": "229.97",
+        "shipping_address": {
+            "line1": "123 Main St",
+            "city": "New York",
+            "state": "NY",
+            "postal_code": "10001",
+            "country": "USA"
+        },
+        "notes": "Leave at door",
+        "items": [
+            {
+                "product_id": 1,
+                "product_title": "iPhone 15",
+                "quantity": 2,
+                "unit_price": 99.99,
+                "subtotal": 199.98
+            }
+        ],
+        "created_at": "2024-01-01T00:00:00.000000Z",
+        "updated_at": "2024-01-01T00:00:00.000000Z"
+    }
+}
+POST /api/v1/auth/orders/{order}/cancel
+Cancel own pending order
+
+Headers:
+
+text
+Authorization: Bearer {token}
+Request:
+
+json
+{
+    "reason": "Changed my mind"
+}
+Response (200):
+
+json
+{
+    "message": "Order cancelled successfully.",
+    "data": {
+        "id": 1,
+        "order_number": "ORD-20240101-ABC123",
+        "status": "cancelled",
+        "cancelled_at": "2024-01-01T00:00:00.000000Z",
+        "cancelled_reason": "Changed my mind",
+        "total_price": 229.97,
+        "created_at": "2024-01-01T00:00:00.000000Z",
+        "updated_at": "2024-01-01T00:00:00.000000Z"
+    }
+}
+POST /api/v1/products/{product}/subscribe
+Subscribe to back-in-stock notifications
+
+Headers:
+
+text
+Authorization: Bearer {token}
+Response (201):
+
+json
+{
+    "message": "You will be notified when this product is back in stock.",
+    "data": {
+        "product_id": 1,
+        "product_title": "iPhone 15"
+    }
+}
+DELETE /api/v1/products/{product}/unsubscribe
+Unsubscribe from back-in-stock
+
+Headers:
+
+text
+Authorization: Bearer {token}
+Response (200):
+
+json
+{
+    "message": "Unsubscribed successfully."
+}
+GET /api/v1/subscriptions
+List user subscriptions
+
+Headers:
+
+text
+Authorization: Bearer {token}
+Response (200):
+
+json
+{
+    "data": [
+        {
+            "product_id": 1,
+            "product_title": "iPhone 15",
+            "product_status": "out_of_stock",
+            "notified": false,
+            "notified_at": null,
+            "created_at": "2024-01-01T00:00:00.000000Z"
+        }
+    ]
+}
+🔑 ADMIN ROUTES (Admin Token Required)
+GET /api/v1/admin/products
+List all products (including drafts)
+
+Headers:
+
+text
+Authorization: Bearer {admin_token}
+Response (200):
+
+json
+{
+    "data": [
+        {
+            "id": 1,
+            "title": "iPhone 15",
+            "slug": "iphone-15",
+            "sku": "PHONE-001",
+            "price": 999.99,
+            "status": "published",
+            "stock_quantity": 50,
+            "deleted_at": null,
+            "permissions": {
+                "can_update": true,
+                "can_delete": true
+            }
+        }
+    ],
+    "meta": {
+        "total": 50,
+        "per_page": 20,
+        "current_page": 1,
+        "last_page": 3
+    }
+}
+POST /api/v1/admin/products
+Create new product
+
+Headers:
+
+text
+Authorization: Bearer {admin_token}
+Content-Type: multipart/form-data
+Request (form-data):
+
+text
+title: iPhone 15 Pro
+sku: PHONE-002
+price: 1099.99
+stock_quantity: 30
+status: published
+description: Latest iPhone Pro model
+image: [file]
+Response (201):
+
+json
+{
+    "message": "Product created successfully.",
+    "data": {
+        "id": 2,
+        "title": "iPhone 15 Pro",
+        "slug": "iphone-15-pro",
+        "sku": "PHONE-002",
+        "price": 1099.99,
+        "status": "published",
+        "stock_quantity": 30,
+        "image_url": "/storage/products/2024/01/iphone-15-pro.jpg",
+        "created_at": "2024-01-01T00:00:00.000000Z",
+        "updated_at": "2024-01-01T00:00:00.000000Z"
+    }
+}
+GET /api/v1/admin/products/{product}
+Show product (admin view)
+
+Headers:
+
+text
+Authorization: Bearer {admin_token}
+Response (200):
+
+json
+{
+    "data": {
+        "id": 1,
+        "title": "iPhone 15",
+        "slug": "iphone-15",
+        "sku": "PHONE-001",
+        "price": 999.99,
+        "cost": 799.99,
+        "status": "published",
+        "stock_quantity": 50,
+        "permissions": {
+            "can_update": true,
+            "can_delete": true
+        }
+    }
+}
+PUT /api/v1/admin/products/{product}
+Update product
+
+Headers:
+
+text
+Authorization: Bearer {admin_token}
+Content-Type: multipart/form-data
+Request (form-data):
+
+text
+title: iPhone 15 Pro Max
+price: 1299.99
+stock_quantity: 25
+status: published
+image: [new_file]
+remove_image: false
+Response (200):
+
+json
+{
+    "message": "Product updated successfully.",
+    "data": {
+        "id": 2,
+        "title": "iPhone 15 Pro Max",
+        "price": 1299.99,
+        "status": "published",
+        "stock_quantity": 25,
+        "updated_at": "2024-01-01T00:00:00.000000Z"
+    }
+}
+DELETE /api/v1/admin/products/{product}
+Soft delete product
+
+Headers:
+
+text
+Authorization: Bearer {admin_token}
+Response (200):
+
+json
+{
+    "message": "Product deleted successfully."
+}
+POST /api/v1/admin/products/{id}/restore
+Restore deleted product
+
+Headers:
+
+text
+Authorization: Bearer {admin_token}
+Response (200):
+
+json
+{
+    "message": "Product restored successfully.",
+    "data": {
+        "id": 1,
+        "title": "iPhone 15",
+        "deleted_at": null
+    }
+}
+DELETE /api/v1/admin/products/{id}/force
+Permanently delete product
+
+Headers:
+
+text
+Authorization: Bearer {admin_token}
+Response (200):
+
+json
+{
+    "message": "Product permanently deleted."
+}
+GET /api/v1/admin/orders
+List all orders
+
+Headers:
+
+text
+Authorization: Bearer {admin_token}
+Response (200):
+
+json
+{
+    "data": [
+        {
+            "id": 1,
+            "order_number": "ORD-20240101-ABC123",
+            "user_id": 1,
+            "user": {
+                "id": 1,
+                "name": "John Doe",
+                "phone": "+1234567890"
+            },
+            "status": "pending",
+            "total_price": 229.97,
+            "items": [
+                {
+                    "product_id": 1,
+                    "product_title": "iPhone 15",
+                    "quantity": 2,
+                    "unit_price": 99.99,
+                    "subtotal": 199.98
+                }
+            ],
+            "created_at": "2024-01-01T00:00:00.000000Z"
+        }
+    ],
+    "meta": {
+        "total": 25,
+        "per_page": 20,
+        "current_page": 1,
+        "last_page": 2
+    }
+}
+GET /api/v1/admin/orders/{order}
+Show order (admin view)
+
+Headers:
+
+text
+Authorization: Bearer {admin_token}
+Response (200):
+
+json
+{
+    "data": {
+        "id": 1,
+        "order_number": "ORD-20240101-ABC123",
+        "user": {
+            "id": 1,
+            "name": "John Doe",
+            "phone": "+1234567890",
+            "email": "john@example.com"
+        },
+        "status": "pending",
+        "total_price": 229.97,
+        "items": [
+            {
+                "product_id": 1,
+                "product_title": "iPhone 15",
+                "quantity": 2,
+                "unit_price": 99.99,
+                "subtotal": 199.98
+            }
+        ],
+        "history": [
+            {
+                "old_status": "pending",
+                "new_status": "confirmed",
+                "changed_by": 1,
+                "reason": null,
+                "created_at": "2024-01-01T00:00:00.000000Z"
+            }
+        ],
+        "created_at": "2024-01-01T00:00:00.000000Z"
+    }
+}
+PUT /api/v1/admin/orders/{order}/status
+Update order status
+
+Headers:
+
+text
+Authorization: Bearer {admin_token}
+Request:
+
+json
+{
+    "status": "confirmed",
+    "reason": "Order verified"
+}
+Valid Statuses: pending, confirmed, processing, shipped, delivered, cancelled
+
+Response (200):
+
+json
+{
+    "message": "Order status updated successfully.",
+    "data": {
+        "id": 1,
+        "order_number": "ORD-20240101-ABC123",
+        "status": "confirmed",
+        "updated_at": "2024-01-01T00:00:00.000000Z"
+    }
+}
+Error (422):
+
+json
+{
+    "message": "Cannot change from shipped to pending.",
+    "errors": {
+        "status": ["Cannot change from shipped to pending."]
+    }
+}
+POST /api/v1/admin/orders/{order}/cancel
+Cancel any order
+
+Headers:
+
+text
+Authorization: Bearer {admin_token}
+Request:
+
+json
+{
+    "reason": "Fraud detected"
+}
+Response (200):
+
+json
+{
+    "message": "Order cancelled successfully.",
+    "data": {
+        "id": 1,
+        "order_number": "ORD-20240101-ABC123",
+        "status": "cancelled",
+        "cancelled_at": "2024-01-01T00:00:00.000000Z",
+        "cancelled_reason": "Fraud detected"
+    }
+}
+ERROR RESPONSES
+401 Unauthenticated
+json
+{
+    "message": "Unauthenticated."
+}
+403 Forbidden
+json
+{
+    "message": "Unauthorized. Admin access required."
+}
+404 Not Found
+json
+{
+    "message": "Resource not found."
+}
+422 Validation Error
+json
+{
+    "message": "The given data was invalid.",
+    "errors": {
+        "field": ["Error message"]
+    }
+}
+429 Too Many Requests
+json
+{
+    "message": "Too many requests. Please try again later."
+}
+500 Server Error
+json
+{
+    "message": "Internal server error.",
+    "error": "Error details"
+}
+COMPLETE ENDPOINT SUMMARY
+#	Method	Endpoint	Auth	Description
+1	POST	/api/v1/auth/register	Public	Register user
+2	POST	/api/v1/auth/login	Public	Login
+3	POST	/api/v1/auth/password/forgot	Public	Request reset code
+4	POST	/api/v1/auth/password/verify	Public	Verify reset code
+5	POST	/api/v1/auth/password/reset	Public	Reset password
+6	GET	/api/v1/auth/products	Public	List products
+7	GET	/api/v1/auth/products/{product}	Public	Show product
+8	DELETE	/api/v1/auth/logout	Token	Logout
+9	GET	/api/v1/auth/user	Token	Get user
+10	POST	/api/v1/auth/refresh	Token	Refresh token
+11	POST	/api/v1/auth/change-password	Token	Change password
+12	POST	/api/v1/auth/phone/verify/send	Token	Send verification
+13	POST	/api/v1/auth/phone/verify	Token	Verify phone
+14	POST	/api/v1/auth/phone/verify/resend	Token	Resend code
+15	GET	/api/v1/auth/profile	Token	Get profile
+16	PUT	/api/v1/auth/profile	Token	Update profile
+17	GET	/api/v1/auth/orders	Token	List user orders
+18	POST	/api/v1/auth/orders	Token	Create order
+19	GET	/api/v1/auth/orders/{order}	Token	Show order
+20	POST	/api/v1/auth/orders/{order}/cancel	Token	Cancel order
+21	POST	/api/v1/products/{product}/subscribe	Token	Subscribe BIS
+22	DELETE	/api/v1/products/{product}/unsubscribe	Token	Unsubscribe BIS
+23	GET	/api/v1/subscriptions	Token	List subscriptions
+24	GET	/api/v1/admin/products	Admin	List all products
+25	POST	/api/v1/admin/products	Admin	Create product
+26	GET	/api/v1/admin/products/{product}	Admin	Show product
+27	PUT	/api/v1/admin/products/{product}	Admin	Update product
+28	DELETE	/api/v1/admin/products/{product}	Admin	Delete product
+29	POST	/api/v1/admin/products/{id}/restore	Admin	Restore product
+30	DELETE	/api/v1/admin/products/{id}/force	Admin	Force delete
+31	GET	/api/v1/admin/orders	Admin	List all orders
+32	GET	/api/v1/admin/orders/{order}	Admin	Show order
+33	PUT	/api/v1/admin/orders/{order}/status	Admin	Update status
+34	POST	/api/v1/admin/orders/{order}/cancel	Admin	Cancel order
