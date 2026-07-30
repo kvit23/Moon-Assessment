@@ -2,94 +2,103 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Actions\Order\CreateOrderAction;
+use App\Actions\Order\CancelOrderAction;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\Order\StoreOrderRequest;
+use App\Http\Resources\Api\V1\OrderResource;
+use App\Http\Requests\Api\V1\Order\CancelOrderRequest;
 use App\Models\Order;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+
+
 
 class OrderController extends Controller
 {
     /**
-     * Display a listing of the user's orders.
+     * Create a new order.
      */
-    public function index(Request $request): JsonResponse
-    {
-        $orders = Order::where('user_id', $request->user()->id)
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
-
-        return response()->json([
-            'data' => $orders,
-        ]);
-    }
-
-    /**
-     * Display the specified order.
-     */
-    public function show(Request $request, Order $order): JsonResponse
-    {
-        // Policy check - ensures user owns the order or is admin
-        $this->authorize('view', $order);
-
-        $order->load(['items.product', 'history']);
-
-        return response()->json([
-            'data' => $order,
-        ]);
-    }
-
-    /**
-     * Store a newly created order.
-     */
-    public function store(Request $request): JsonResponse
+    public function store(StoreOrderRequest $request, CreateOrderAction $action): JsonResponse
     {
         // Policy check
         $this->authorize('create', Order::class);
 
-        $validated = $request->validate([
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'shipping_address' => 'required|array',
-            'shipping_address.line1' => 'required|string',
-            'shipping_address.line2' => 'nullable|string',
-            'shipping_address.city' => 'required|string',
-            'shipping_address.state' => 'required|string',
-            'shipping_address.postal_code' => 'required|string',
-            'shipping_address.country' => 'required|string',
-            'notes' => 'nullable|string',
-        ]);
+        try {
+            $order = $action->execute(
+                $request->validated(),
+                $request->user()->id
+            );
 
-        // Create order logic here
-        // This would include stock reservation, price calculation, etc.
+            return (new OrderResource($order))
+                ->additional(['message' => 'Order created successfully.'])
+                ->response()
+                ->setStatusCode(201);
 
-        return response()->json([
-            'message' => 'Order created successfully.',
-            'data' => $order ?? null,
-        ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to create order.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
-     * Cancel the specified order.
+     * Get user's orders.
      */
-    public function cancel(Request $request, Order $order): JsonResponse
+    public function index(): JsonResponse
+    {
+        $orders = Order::where('user_id', auth()->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return OrderResource::collection($orders)
+            ->response()
+            ->setStatusCode(200);
+    }
+
+    /**
+     * Get a specific order.
+     */
+    public function show(Order $order): JsonResponse
+    {
+        $this->authorize('view', $order);
+
+        $order->load(['items.product']);
+
+        return (new OrderResource($order))
+            ->response()
+            ->setStatusCode(200);
+    }
+
+    /**
+     * Cancel an order.
+     */
+    public function cancel(CancelOrderRequest $request, CancelOrderAction $action, Order $order): JsonResponse
     {
         // Policy check
         $this->authorize('cancel', $order);
 
-        $validated = $request->validate([
-            'reason' => 'required|string|max:255',
-        ]);
+        try {
+            $order = $action->execute(
+                $order,
+                $request->input('reason'),
+                $request->user()->id
+            );
 
-        $order->update([
-            'status' => 'cancelled',
-            'cancelled_at' => now(),
-            'cancelled_reason' => $validated['reason'],
-        ]);
+            return (new OrderResource($order))
+                ->additional(['message' => 'Order cancelled successfully.'])
+                ->response()
+                ->setStatusCode(200);
 
-        return response()->json([
-            'message' => 'Order cancelled successfully.',
-            'data' => $order,
-        ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to cancel order.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

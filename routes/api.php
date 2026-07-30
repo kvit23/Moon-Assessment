@@ -69,6 +69,13 @@ Route::prefix('v1')->group(function () {
                 Route::post('/{order}/cancel', [OrderController::class, 'cancel']);
             });
             
+            //orders
+                Route::get('/orders', [OrderController::class, 'index']);
+                Route::get('/orders/{order}', [OrderController::class, 'show']);
+                Route::post('/orders', [OrderController::class, 'store']);
+
+
+            
             // Profile
             Route::prefix('profile')->group(function () {
                 Route::get('/', [ProfileController::class, 'show']);
