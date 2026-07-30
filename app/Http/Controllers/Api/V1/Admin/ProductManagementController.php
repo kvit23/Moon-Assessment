@@ -3,123 +3,182 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\Product\StoreProductRequest;
+use App\Http\Requests\Api\V1\Product\UpdateProductRequest;
+use App\Http\Resources\Api\V1\ProductResource;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ProductManagementController extends Controller
 {
     /**
-     * Display a listing of all products (including drafts).
+     * List all products (including drafts).
      */
     public function index(): JsonResponse
     {
-        $products = Product::withTrashed()->get();
+        $products = Product::withTrashed()
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
 
-        return response()->json([
-            'data' => $products,
-        ]);
+        return ProductResource::collection($products)
+            ->response()
+            ->setStatusCode(200);
     }
 
     /**
-     * Store a newly created product.
+     * Create a new product.
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreProductRequest $request): JsonResponse
     {
-        // Policy automatically checked via middleware
-        // Admin middleware ensures only admins can access
+        $this->authorize('create', Product::class);
 
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'stock_quantity' => 'required|integer|min:0',
-            'status' => 'required|in:draft,published,archived',
-        ]);
+        $validated = $request->validated();
 
-        $product = Product::create($validated);
+        $product = DB::transaction(function () use ($validated, $request) {
+            // Handle image upload
+            if ($request->hasFile('image')) {
+                $path = $request->file('image')->store('products', 'public');
+                $validated['image'] = $path;
+            }
 
-        return response()->json([
-            'message' => 'Product created successfully.',
-            'data' => $product,
-        ], 201);
+            // Set created_by
+            $validated['created_by'] = $request->user()->id;
+
+            // Set published_at if status is published
+            if ($validated['status'] === 'published') {
+                $validated['published_at'] = now();
+            }
+
+            return Product::create($validated);
+        });
+
+        return (new ProductResource($product))
+            ->additional(['message' => 'Product created successfully.'])
+            ->response()
+            ->setStatusCode(201);
     }
 
     /**
-     * Display the specified product.
+     * Show a product (admin view).
      */
     public function show(Product $product): JsonResponse
     {
-        // Policy check
         $this->authorize('view', $product);
 
-        return response()->json([
-            'data' => $product,
-        ]);
+        return (new ProductResource($product))
+            ->response()
+            ->setStatusCode(200);
     }
 
     /**
-     * Update the specified product.
+     * Update a product.
      */
-    public function update(Request $request, Product $product): JsonResponse
+    public function update(UpdateProductRequest $request, Product $product): JsonResponse
     {
-        // Policy check
         $this->authorize('update', $product);
 
-        $validated = $request->validate([
-            'title' => 'sometimes|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'sometimes|numeric|min:0',
-            'stock_quantity' => 'sometimes|integer|min:0',
-            'status' => 'sometimes|in:draft,published,archived',
-        ]);
+        $validated = $request->validated();
 
-        $product->update($validated);
+        $product = DB::transaction(function () use ($validated, $request, $product) {
+            // Handle new image upload
+            if ($request->hasFile('image')) {
+                // Delete old image
+                if ($product->image) {
+                    Storage::disk('public')->delete($product->image);
+                }
 
-        return response()->json([
-            'message' => 'Product updated successfully.',
-            'data' => $product,
-        ]);
+                $path = $request->file('image')->store('products', 'public');
+                $validated['image'] = $path;
+            }
+
+            // Handle removing image
+            if ($request->input('remove_image', false)) {
+                if ($product->image) {
+                    Storage::disk('public')->delete($product->image);
+                }
+                $validated['image'] = null;
+            }
+
+            // Update slug if title changed
+            if (isset($validated['title'])) {
+                $validated['slug'] = Str::slug($validated['title']);
+            }
+
+            // Update published_at if status changed to published
+            if (isset($validated['status']) && 
+                $validated['status'] === 'published' && 
+                $product->status !== 'published') {
+                $validated['published_at'] = now();
+            }
+
+            // Set updated_by
+            $validated['updated_by'] = $request->user()->id;
+
+            $product->update($validated);
+
+            return $product;
+        });
+
+        return (new ProductResource($product))
+            ->additional(['message' => 'Product updated successfully.'])
+            ->response()
+            ->setStatusCode(200);
     }
 
     /**
-     * Remove the specified product.
+     * Delete a product (soft delete).
      */
     public function destroy(Product $product): JsonResponse
     {
-        // Policy check
         $this->authorize('delete', $product);
 
         $product->delete();
 
         return response()->json([
             'message' => 'Product deleted successfully.',
-        ]);
+        ], 200);
     }
 
     /**
-     * Update product stock.
+     * Restore a soft-deleted product.
      */
-    public function updateStock(Request $request, Product $product): JsonResponse
+    public function restore(int $id): JsonResponse
     {
-        // Policy check
-        $this->authorize('updateStock', $product);
+        $product = Product::withTrashed()->findOrFail($id);
+        
+        $this->authorize('restore', $product);
 
-        $validated = $request->validate([
-            'stock_quantity' => 'required|integer|min:0',
-            'reason' => 'nullable|string|max:255',
-        ]);
-
-        $product->update([
-            'stock_quantity' => $validated['stock_quantity'],
-        ]);
-
-        // Log stock change
-        // StockMovement::create([...]);
+        $product->restore();
 
         return response()->json([
-            'message' => 'Stock updated successfully.',
-            'data' => $product,
-        ]);
+            'message' => 'Product restored successfully.',
+            'data' => new ProductResource($product),
+        ], 200);
+    }
+
+    /**
+     * Permanently delete a product.
+     */
+    public function forceDelete(int $id): JsonResponse
+    {
+        $product = Product::withTrashed()->findOrFail($id);
+        
+        $this->authorize('forceDelete', $product);
+
+        DB::transaction(function () use ($product) {
+            // Delete image
+            if ($product->image) {
+                Storage::disk('public')->delete($product->image);
+            }
+
+            $product->forceDelete();
+        });
+
+        return response()->json([
+            'message' => 'Product permanently deleted.',
+        ], 200);
     }
 }

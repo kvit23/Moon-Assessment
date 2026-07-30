@@ -2,41 +2,77 @@
 
 namespace Database\Factories;
 
+use App\Enums\UserRoleEnum;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-/**
- * @extends Factory<User>
- */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
-    protected static ?string $password;
+    protected $model = User::class;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
+            'name' => $this->faker->name(),
+            'email' => $this->faker->unique()->safeEmail(),
+            'phone' => $this->faker->unique()->phoneNumber(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+            'phone_verified_at' => now(),
+            'password' => Hash::make('Password123!'),
             'remember_token' => Str::random(10),
+            'role' => UserRoleEnum::USER,
+            'is_active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
         ];
     }
 
     /**
-     * Indicate that the model's email address should be unverified.
+     * Indicate that the user is an admin.
      */
-    public function unverified(): static
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => UserRoleEnum::ADMIN,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is a regular user.
+     */
+    public function user(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => UserRoleEnum::USER,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is inactive.
+     */
+    public function inactive(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_active' => false,
+        ]);
+    }
+
+    /**
+     * Indicate that the phone is not verified.
+     */
+    public function unverifiedPhone(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'phone_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that the email is not verified.
+     */
+    public function unverifiedEmail(): static
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
