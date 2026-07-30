@@ -115,4 +115,15 @@ class User extends Authenticatable
             'phone_verified_at' => $this->freshTimestamp(),
         ])->save();
     }
+
+    /**
+     * Scope a query to only include users who want notifications.
+     */
+    public function scopeWantsNotifications($query)
+    {
+        // In a real app, you'd have a settings table
+        // For now, we'll include all active users
+        return $query->where('is_active', true);
+    }
+
 }

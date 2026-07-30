@@ -9,19 +9,18 @@ use Illuminate\Support\Facades\Log;
 
 class ProductObserver
 {
+    
     /**
      * Handle the Product "created" event.
      */
     public function created(Product $product): void
     {
-        // Dispatch event for any listeners
+        // Dispatch the event
+        // This triggers the listener which handles notifications
         event(new ProductCreated($product));
 
-        // Log the creation
-        Log::info('Product created', [
+        Log::info('Product created event dispatched', [
             'product_id' => $product->id,
-            'sku' => $product->sku,
-            'created_by' => $product->created_by,
         ]);
     }
 
