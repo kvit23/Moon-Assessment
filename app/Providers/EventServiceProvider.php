@@ -9,6 +9,8 @@ use App\Events\PasswordResetRequested;
 use App\Events\PhoneVerificationRequested;
 use App\Events\UserRegistered;
 use App\Events\BackInStock;
+use App\Events\OrderStatusChanged;
+use App\Listeners\SendOrderStatusNotification;
 use App\Events\ProductCreated;
 use App\Listeners\LogPasswordReset;
 use App\Listeners\SendPasswordResetSms;
@@ -49,6 +51,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         BackInStock::class => [
             NotifyBackInStockSubscribers::class,
+        ],
+        OrderStatusChanged::class => [
+            SendOrderStatusNotification::class,
         ],
     ];
 

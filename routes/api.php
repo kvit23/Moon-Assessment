@@ -105,7 +105,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/orders/{order}', [OrderManagementController::class, 'show']);
             Route::put('/orders/{order}/status', [OrderManagementController::class, 'updateStatus']);
             Route::post('/orders/{order}/cancel', [OrderManagementController::class, 'cancel']);
-            Route::get('/orders/statistics', [OrderManagementController::class, 'statistics']);
+
     });
 
     // Back-in-stock subscription

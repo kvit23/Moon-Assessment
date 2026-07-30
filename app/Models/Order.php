@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Enums\OrderStatusEnum;
+use App\Events\OrderStatusChanged;
 
 class Order extends Model
 {
@@ -104,6 +105,9 @@ class Order extends Model
             'changed_by' => $changedBy,
             'reason' => $reason,
         ]);
+
+        //Dispatch event for notifications (QUEUED)
+        event(new OrderStatusChanged($this, $oldStatus, $newStatus, $changedBy));
 
         return true;
     }
