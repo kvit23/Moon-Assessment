@@ -100,7 +100,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/products/{id}/restore', [ProductManagementController::class, 'restore']);
             Route::delete('/products/{id}/force', [ProductManagementController::class, 'forceDelete']);
             
-            // ─── Order Management ───
+            //Order Management 
             Route::get('/orders', [OrderManagementController::class, 'index']);
             Route::get('/orders/{order}', [OrderManagementController::class, 'show']);
             Route::put('/orders/{order}/status', [OrderManagementController::class, 'updateStatus']);

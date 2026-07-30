@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Enums\OrderStatusEnum;
 
 class Order extends Model
 {
@@ -52,4 +53,59 @@ class Order extends Model
     {
         return 'ORD-' . date('Ymd') . '-' . strtoupper(uniqid());
     }
+    /**
+     * Get the status history.
+     */
+    public function history(): HasMany
+    {
+        return $this->hasMany(OrderStatusHistory::class);
+    }
+
+
+    /**
+     * Check if order can transition to a new status.
+     * Simple validation: check if status is in allowed list.
+     */
+    public function canTransitionTo(string $newStatus): bool
+    {
+        // Get current status
+        $currentStatus = $this->status ?? 'pending';
+
+        //Prevent duplicate status updates
+        if ($currentStatus === $newStatus) {
+            return false;
+        }
+
+        // Check if transition is allowed
+        $currentEnum = OrderStatusEnum::from($currentStatus);
+        return $currentEnum->canTransitionTo($newStatus);
+    }
+
+    /**
+     * Update order status and record history.
+     */
+    public function updateStatus(string $newStatus, int $changedBy, ?string $reason = null): bool
+    {
+        //Validate transition
+        if (!$this->canTransitionTo($newStatus)) {
+            return false;
+        }
+
+        $oldStatus = $this->status;
+
+        // Update status
+        $this->status = $newStatus;
+        $this->save();
+
+        //Record history
+        $this->history()->create([
+            'old_status' => $oldStatus,
+            'new_status' => $newStatus,
+            'changed_by' => $changedBy,
+            'reason' => $reason,
+        ]);
+
+        return true;
+    }
 }
+    

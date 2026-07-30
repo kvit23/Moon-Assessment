@@ -46,9 +46,8 @@ class OrderPolicy
     /**
      * Determine if the user can update the order.
      */
-    public function update(User $user, Order $order): bool
+    public function updateStatus(User $user, Order $order): bool
     {
-        // Only admins can update orders
         return $user->isAdmin();
     }
 
