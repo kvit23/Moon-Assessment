@@ -10,7 +10,6 @@ use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class ProductManagementController extends Controller
 {
@@ -43,6 +42,8 @@ class ProductManagementController extends Controller
                 $path = $request->file('image')->store('products', 'public');
                 $validated['image'] = $path;
             }
+
+            // ✅ NO SLUG GENERATION — Just use title
 
             // Set created_by
             $validated['created_by'] = $request->user()->id;
@@ -102,10 +103,7 @@ class ProductManagementController extends Controller
                 $validated['image'] = null;
             }
 
-            // Update slug if title changed
-            if (isset($validated['title'])) {
-                $validated['slug'] = Str::slug($validated['title']);
-            }
+            // ✅ NO SLUG UPDATE
 
             // Update published_at if status changed to published
             if (isset($validated['status']) && 
